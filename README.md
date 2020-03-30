@@ -5,7 +5,7 @@ This python3 script reads the covid-19 statistics from Johns Hopkins University 
 Example output:
 ![covid-19 stats](/example.png)
 
-`
+```
 Times to double number of infected people in days
 =================================================
                   2020-03-30 23:21:50 UTC
@@ -22,4 +22,4 @@ Spain          :   7.73   4.74
 Sweden         :   9.79   7.48
 US             :   4.68   3.36
 United Kingdom :   5.21   3.93
-`
+```

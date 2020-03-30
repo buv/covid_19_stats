@@ -21,6 +21,7 @@ if req.status_code != requests.codes.ok:
     print('Content was not found.')
     sys.exit()
 
+ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 data = {}
 for line in req.text.split('\n'):
     if not line:
@@ -34,20 +35,22 @@ for line in req.text.split('\n'):
 
 print("Times to double number of infected people in days")
 print("=================================================")
+print("                  {}".format(ts))
 print("                  last day and last week average")
 print("Country           1-day  7-days")
 print("-------------------------------")
 for country, vector in sorted(data.items()):
     print("{:15s}:  {:5.2f}  {:5.2f}".format(country, get_double_time(vector, 1), get_double_time(vector, 7)))
+    # normalize starting point by creating an x-axis offset
+    # this offset is calculated from the derivative of the first point above trigger_count
     offset = math.log(vector[0]/trigger_count)/math.log(vector[1]/vector[0])
     plt.plot([ i+offset for i in range(len(vector)) ], vector, label=country)
 
-        
 plt.gca().set_yscale('log')
 plt.legend(loc='best')
 plt.xlabel("days since {} infected".format(int(trigger_count)))
 plt.ylabel("# infected")
-plt.title("Corona infected ({})".format(datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")))
+plt.title("Corona infected ({})".format(ts))
 plt.grid(b=True, which='major', linestyle='--')
 plt.grid(b=True, which='minor', linestyle='--', alpha=0.2)
 plt.show()    

@@ -23,14 +23,20 @@ args = parser.parse_args()
 
 def get_double_time(v, days):
     # calculates the mean time for doubling for a given period or max. available data
-    if len(v)<days+1:
-        days = len(v)-1
-    return 0. if v[-1] == v[-1-days] else days*math.log(2)/math.log(vector[-1]/vector[-1-days])
+    double_time = 0.
+    if len(v) > 1:
+        if len(v) < days+1:
+            days = len(v)-1
+        for idx in range(-1-days, -len(v), -1):
+            if v[-1] > v[idx]:
+                double_time = (-1-idx)*math.log(2)/math.log(vector[-1]/vector[idx])
+                break
+        return double_time
 
 def calc_offset(v):
     # calculate offset in days based on mean increase rate of first two distinct values
     offset = 0.
-    if len(v)>1:
+    if len(v) > 1:
         for idx in range(1,len(v)):
             if v[idx] > v[0]:
                 offset = math.log(v[0]/args.trigger_count)/math.log(v[idx]/v[0])/idx
@@ -74,7 +80,7 @@ print("                  last day and last week average")
 print("Country           1-day  7-days")
 print("-------------------------------")
 for country, vector in sorted(data.items()):
-    if len(vector)>1 and country not in skip_country:
+    if len(vector) > 1 and country not in skip_country:
         print("{:15s}:  {:5.2f}  {:5.2f}".format(country, get_double_time(vector, 1), get_double_time(vector, 7)))
         # normalize starting point by creating an x-axis offset
         # this offset is calculated from the derivative of the first point above trigger_count

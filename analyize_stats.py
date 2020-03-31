@@ -5,10 +5,12 @@ import pprint
 import argparse
 import datetime
 import requests
+import urllib.parse
 import matplotlib.pyplot as plt
 
 default_targets = ['France', 'Germany', 'Italy', 'Iran', 'Japan', 'Norway', 'Spain', 'Sweden', 'United Kingdom', 'US']
-base_url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/'
+github_repo = 'CSSEGISandData/COVID-19'
+github_path = 'csse_covid_19_data/csse_covid_19_time_series/'
 category2filename = {
     'infected': 'time_series_covid19_confirmed_global.csv',
     'recovered': 'time_series_covid19_recovered_global.csv',
@@ -16,7 +18,7 @@ category2filename = {
 }
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-c", "--category", action="store", default="infected", help="Generate stats for number either of category [infected|recovered|deaths].")
+parser.add_argument("-c", "--category", action="store", choices=['infected', 'recovered', 'deaths'], default="infected", help="Generate stats for number either of category [infected|recovered|deaths].")
 parser.add_argument("-l", "--country-list", nargs='*', default=default_targets, help="List of countries/regions to analyse.")
 parser.add_argument("-t", "--trigger-count", type=int, action="store", default=100, help="Case count from which to start analysis.")
 args = parser.parse_args()
@@ -46,12 +48,18 @@ def calc_offset(v):
 #
 # main
 #
-req = requests.get(base_url+category2filename[args.category])
+github_filename = github_path+category2filename[args.category]
+req = requests.get('https://api.github.com/repos/{}/commits?path={}&page=1&per_page=1'.format(github_repo, urllib.parse.quote(github_filename, safe='')))
+if req.status_code == requests.codes.ok:
+    ts = req.json()[0]['commit']['committer']['date']
+else:
+    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+req = requests.get('https://raw.githubusercontent.com/{}/master/{}'.format(github_repo, github_filename))
 if req.status_code != requests.codes.ok:
     print('Content was not found.')
     sys.exit()
 
-ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 data = {}
 # aggregate regions first
 for line in req.text.split('\n'):
@@ -73,8 +81,9 @@ for country, cases in data.items():
             data[country] = [ v for v in cases[idx:] ]
             break
 
-print("Times to double number of {} people in days".format(args.category))
-print("=================================================")
+title = "Times to double number of {} people in days".format(args.category)
+print(title)
+print("="*len(title))
 print("                  {}".format(ts))
 print("                  last day and last week average")
 print("Country           1-day  7-days")

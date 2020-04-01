@@ -17,8 +17,12 @@ category2filename = {
     'deaths': 'time_series_covid19_deaths_global.csv'
 }
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-c", "--category", action="store", choices=['infected', 'recovered', 'deaths'], default="infected", help="Generate stats for number either of category [infected|recovered|deaths].")
+co = ''
+parser = argparse.ArgumentParser(description='Read current covid-19 data from Johns Hopkins University, select countries of interest, compare countries course by shifting corresponding curve to a virtual outbreak date.')
+group = parser.add_mutually_exclusive_group()
+group.add_argument("-i", "--infected", action="store_const", const="infected", dest="category", default="infected", help="Generate stats for infected (default).")
+group.add_argument("-r", "--recovered", action="store_const", const="recovered", dest="category", help="Generate stats for recovered.")
+group.add_argument("-d", "--deaths", action="store_const", const="deaths", dest="category", help="Generate stats for deaths.")
 parser.add_argument("-l", "--country-list", nargs='*', default=default_targets, help="List of countries/regions to analyse.")
 parser.add_argument("-t", "--trigger-count", type=int, action="store", default=100, help="Case count from which to start analysis.")
 args = parser.parse_args()
@@ -81,10 +85,10 @@ for country, cases in data.items():
             data[country] = [ v for v in cases[idx:] ]
             break
 
-title = "Times to double number of {} people in days".format(args.category)
+title = "Times to double number of {} in days".format(args.category)
 print(title)
 print("="*len(title))
-print("                  {}".format(ts))
+print("(Johns Hopkins University data from {})".format(ts))
 print("                  last day and last week average")
 print("Country           1-day  7-days")
 print("-------------------------------")
@@ -99,7 +103,7 @@ plt.gca().set_yscale('log')
 plt.legend(loc='best')
 plt.xlabel("days since {} {}".format(args.trigger_count, args.category))
 plt.ylabel("# {}".format(args.category))
-plt.title("Corona {} ({})".format(args.category, ts))
+plt.title("COVID-19 {}\n(Johns Hopkins University data from {})".format(args.category, ts))
 plt.grid(b=True, which='major', linestyle='--')
 plt.grid(b=True, which='minor', linestyle='--', alpha=0.2)
 plt.show()    
